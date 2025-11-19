@@ -1,0 +1,501 @@
+{
+	"info": {
+		"_postman_id": "bellezapp-auth-collection",
+		"name": "Bellezapp POS - Autenticación",
+		"description": "Colección de Postman para la autenticación en Bellezapp POS Backend - Incluye registro, login y perfil de usuario",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Autenticación",
+			"item": [
+				{
+					"name": "Registrar Usuario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.environment.set(\"authToken\", jsonData.token);",
+									"        pm.environment.set(\"userId\", jsonData.user._id);",
+									"        console.log(\"Token guardado:\", jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"email\": \"admin@bellezapp.com\",\n    \"firstName\": \"Admin\",\n    \"lastName\": \"Sistema\",\n    \"password\": \"Admin123!\",\n    \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Registra un nuevo usuario en el sistema.\n\n**Campos requeridos:**\n- `username`: Nombre de usuario único\n- `email`: Correo electrónico único\n- `firstName`: Nombre\n- `lastName`: Apellido\n- `password`: Contraseña (mínimo 6 caracteres)\n- `role`: Rol del usuario (admin, manager, cashier)\n\n**Respuesta exitosa (201):**\n```json\n{\n    \"message\": \"User registered successfully\",\n    \"token\": \"jwt_token_here\",\n    \"user\": {\n        \"_id\": \"user_id\",\n        \"username\": \"admin\",\n        \"email\": \"admin@bellezapp.com\",\n        \"firstName\": \"Admin\",\n        \"lastName\": \"Sistema\",\n        \"role\": \"admin\",\n        \"isActive\": true\n    }\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Cajero",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.environment.set(\"cashierToken\", jsonData.token);",
+									"        pm.environment.set(\"cashierId\", jsonData.user._id);",
+									"        console.log(\"Token de cajero guardado:\", jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"cajero1\",\n    \"email\": \"cajero1@bellezapp.com\",\n    \"firstName\": \"María\",\n    \"lastName\": \"González\",\n    \"password\": \"Cajero123!\",\n    \"role\": \"cashier\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Ejemplo de registro de un usuario con rol de cajero."
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Gerente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.environment.set(\"managerToken\", jsonData.token);",
+									"        pm.environment.set(\"managerId\", jsonData.user._id);",
+									"        console.log(\"Token de gerente guardado:\", jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"gerente1\",\n    \"email\": \"gerente1@bellezapp.com\",\n    \"firstName\": \"Carlos\",\n    \"lastName\": \"Rodríguez\",\n    \"password\": \"Manager123!\",\n    \"role\": \"manager\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Ejemplo de registro de un usuario con rol de gerente."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.environment.set(\"authToken\", jsonData.token);",
+									"        pm.environment.set(\"userId\", jsonData.user._id);",
+									"        console.log(\"Login exitoso. Token guardado:\", jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@bellezapp.com\",\n    \"password\": \"Admin123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Inicia sesión con email y contraseña.\n\n**Campos requeridos:**\n- `email`: Correo electrónico del usuario\n- `password`: Contraseña del usuario\n\n**Respuesta exitosa (200):**\n```json\n{\n    \"message\": \"Login successful\",\n    \"token\": \"jwt_token_here\",\n    \"user\": {\n        \"_id\": \"user_id\",\n        \"username\": \"admin\",\n        \"email\": \"admin@bellezapp.com\",\n        \"firstName\": \"Admin\",\n        \"lastName\": \"Sistema\",\n        \"role\": \"admin\",\n        \"isActive\": true,\n        \"stores\": []\n    }\n}\n```\n\n**Nota:** El token se guarda automáticamente en la variable de entorno `authToken` para usar en otras peticiones."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Perfil",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"profile"
+							]
+						},
+						"description": "Obtiene el perfil del usuario autenticado.\n\n**Requiere autenticación:** Sí (Bearer Token)\n\n**Respuesta exitosa (200):**\n```json\n{\n    \"_id\": \"user_id\",\n    \"username\": \"admin\",\n    \"email\": \"admin@bellezapp.com\",\n    \"firstName\": \"Admin\",\n    \"lastName\": \"Sistema\",\n    \"role\": \"admin\",\n    \"isActive\": true,\n    \"stores\": [],\n    \"createdAt\": \"2025-01-01T00:00:00.000Z\",\n    \"updatedAt\": \"2025-01-01T00:00:00.000Z\"\n}\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para autenticación: registro, login y perfil de usuario."
+		},
+		{
+			"name": "Gestión de Usuarios (Admin)",
+			"item": [
+				{
+					"name": "Listar Todos los Usuarios",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						},
+						"description": "Lista todos los usuarios del sistema.\n\n**Requiere autenticación:** Sí (Bearer Token)\n**Requiere rol:** admin\n\n**Respuesta exitosa (200):**\n```json\n[\n    {\n        \"_id\": \"user_id\",\n        \"username\": \"admin\",\n        \"email\": \"admin@bellezapp.com\",\n        \"firstName\": \"Admin\",\n        \"lastName\": \"Sistema\",\n        \"role\": \"admin\",\n        \"isActive\": true,\n        \"stores\": []\n    }\n]\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Usuario por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"{{userId}}"
+							]
+						},
+						"description": "Obtiene la información de un usuario específico por su ID.\n\n**Requiere autenticación:** Sí (Bearer Token)"
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Usuario (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"nuevo_usuario\",\n    \"email\": \"nuevo@bellezapp.com\",\n    \"firstName\": \"Nuevo\",\n    \"lastName\": \"Usuario\",\n    \"password\": \"Password123!\",\n    \"role\": \"cashier\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						},
+						"description": "Crea un nuevo usuario en el sistema.\n\n**Requiere autenticación:** Sí (Bearer Token)\n**Requiere rol:** admin"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Usuario",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Nombre Actualizado\",\n    \"lastName\": \"Apellido Actualizado\",\n    \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"{{userId}}"
+							]
+						},
+						"description": "Actualiza la información de un usuario.\n\n**Requiere autenticación:** Sí (Bearer Token)\n**Requiere rol:** admin\n\n**Campos actualizables:**\n- firstName\n- lastName\n- email\n- username\n- role\n- isActive\n- password (se debe enviar como \"password\", no \"passwordHash\")"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Usuario",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"{{userId}}"
+							]
+						},
+						"description": "Elimina un usuario del sistema.\n\n**Requiere autenticación:** Sí (Bearer Token)\n**Requiere rol:** admin"
+					},
+					"response": []
+				},
+				{
+					"name": "Asignar Tienda a Usuario",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"{{userId}}\",\n    \"storeId\": \"{{storeId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/assign-store",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"assign-store"
+							]
+						},
+						"description": "Asigna una tienda a un usuario.\n\n**Requiere autenticación:** Sí (Bearer Token)\n**Requiere rol:** admin\n\n**Campos requeridos:**\n- `userId`: ID del usuario\n- `storeId`: ID de la tienda a asignar"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestión de usuarios (solo administradores)."
+		},
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Verificar Estado del Servidor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Verifica que el servidor esté funcionando correctamente.\n\n**No requiere autenticación**\n\n**Respuesta exitosa (200):**\n```json\n{\n    \"status\": \"OK\",\n    \"message\": \"Bellezapp POS Backend is running\"\n}\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint para verificar el estado del servidor."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "storeId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "cashierToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "cashierId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "managerToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "managerId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
