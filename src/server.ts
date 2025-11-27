@@ -27,7 +27,7 @@ const app: Application = express();
 const PORT = process.env.PORT || 3000;
 
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: '*',
   credentials: false,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
