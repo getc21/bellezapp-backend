@@ -12,6 +12,7 @@ router.use(authenticateToken);
 
 router.get('/', validateStoreAccessIfProvided, productController.getAllProducts);
 router.get('/search/:query', validateStoreAccessIfProvided, productController.searchProduct);
+router.get('/:id/stocks', productController.getProductStocks);
 router.get('/:id', validateProductStoreAccess, productController.getProduct);
 router.post(
   '/', 

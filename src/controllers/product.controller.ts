@@ -14,19 +14,20 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
       return next(new AppError('Store ID is required', 400));
     }
 
-    // Encontrar todos los ProductStore para la tienda actual
+    // Encontrar todos los ProductStore para la tienda actual (excluyendo eliminados)
     const productStores = await ProductStore.find({ storeId })
       .populate({
         path: 'productId',
+        match: { isDeleted: { $ne: true } }, // Excluir productos eliminados
         populate: [
           { path: 'categoryId', select: 'name' },
           { path: 'supplierId', select: 'name' }
         ]
       })
-      .populate('locationId', 'name'); // Ubicación específica de esta tienda
+      .populate('locationId'); // Obtener el documento completo de Location
 
-    // Filtrar por categoryId o supplierId si se proporciona
-    let filtered = productStores;
+    // Filtrar por productId null (producto eliminado) y por categoryId o supplierId si se proporciona
+    let filtered = productStores.filter(ps => ps.productId !== null);
     
     if (categoryId) {
       filtered = filtered.filter(ps => 
@@ -43,6 +44,8 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
     // Combinar datos de Product y ProductStore
     const products = filtered.map(ps => {
       const productData = (ps.productId as any) || {};
+      const location = (ps.locationId as any);
+      
       return {
         _id: productData._id,
         name: productData.name,
@@ -50,7 +53,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
         categoryId: productData.categoryId,
         supplierId: productData.supplierId,
         storeId: productData.storeId,
-        locationId: (ps.locationId as any)?.name || ps.locationId, // Ubicación de ProductStore
+        locationId: location, // Devolver el objeto completo de location
         foto: productData.foto,
         weight: productData.weight,
         expiryDate: productData.expiryDate,
@@ -89,18 +92,19 @@ export const getProduct = async (req: Request, res: Response, next: NextFunction
       path: 'productId',
       populate: [
         { path: 'categoryId' },
-        { path: 'supplierId' },
-        { path: 'locationId' }
+        { path: 'supplierId' }
       ]
-    });
+    }).populate('locationId'); // Obtener documento completo de Location
 
     if (!productStore) {
       return next(new AppError('Product not found in this store', 404));
     }
 
-    // Combinar datos
+    // Combinar datos - devolver el objeto completo de locationId
+    const location = (productStore.locationId as any);
     const product = {
       ...(productStore.productId as any),
+      locationId: location, // Devolver el objeto completo de location
       stock: productStore.stock,
       salePrice: productStore.salePrice,
       purchasePrice: productStore.purchasePrice,
@@ -118,16 +122,30 @@ export const getProduct = async (req: Request, res: Response, next: NextFunction
 
 export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { storeId, salePrice, purchasePrice, stock } = req.body;
+    // Convertir strings a números (llegan como strings en multipart)
+    const storeId = req.body.storeId;
+    const salePrice = parseFloat(req.body.salePrice) || 0;
+    const purchasePrice = parseFloat(req.body.purchasePrice) || 0;
+    const stock = parseInt(req.body.stock) || 0;
+    
     const userId = (req as any).user?.id;
     const userRole = (req as any).user?.role;
 
-    // Debug logs
+    // Debug logs - log ALL body fields
     console.log('=== CREATE PRODUCT DEBUG ===');
-    console.log(`Request user object: ${JSON.stringify((req as any).user)}`);
-    console.log(`Extracted userId: ${userId}`);
-    console.log(`User role: ${userRole}`);
-    console.log(`Received storeId: ${storeId}`);
+    console.log('📨 Full request.body:', JSON.stringify(req.body, null, 2));
+    console.log('🔑 Extracted fields (after conversion):');
+    console.log(`  - name: ${req.body.name}`);
+    console.log(`  - categoryId: ${req.body.categoryId}`);
+    console.log(`  - supplierId: ${req.body.supplierId}`);
+    console.log(`  - locationId: ${req.body.locationId}`);
+    console.log(`  - storeId: ${storeId}`);
+    console.log(`  - stock: ${stock} (type: ${typeof stock})`);
+    console.log(`  - salePrice: ${salePrice} (type: ${typeof salePrice})`);
+    console.log(`  - purchasePrice: ${purchasePrice} (type: ${typeof purchasePrice})`);
+    console.log(`👤 User info:`);
+    console.log(`  - userId: ${userId}`);
+    console.log(`  - userRole: ${userRole}`);
 
     if (!storeId || !userId) {
       console.log(`❌ Missing data - storeId: ${storeId}, userId: ${userId}`);
@@ -192,20 +210,31 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
     console.log(`📦 Creating ProductStore entries for ${storesToCreate.length} stores`);
     
     for (const userStoreId of storesToCreate) {
-      const isCurrentStore = userStoreId.toString() === storeId;
+      const userStoreIdStr = userStoreId.toString();
+      const currentStoreIdStr = storeId.toString();
+      const isCurrentStore = userStoreIdStr === currentStoreIdStr;
+      const locationIdToUse = isCurrentStore ? req.body.locationId : null;
+      
+      console.log(`  Creating ProductStore for store ${userStoreIdStr}`);
+      console.log(`    - currentStoreId: ${currentStoreIdStr}`);
+      console.log(`    - isCurrentStore: ${isCurrentStore}`);
+      console.log(`    - locationId: ${locationIdToUse}`);
+      console.log(`    - stock: ${isCurrentStore ? stock : 0}`);
+      console.log(`    - salePrice: ${isCurrentStore ? salePrice : 0}`);
+      console.log(`    - purchasePrice: ${isCurrentStore ? purchasePrice : 0}`);
       
       // Si es la tienda actual, usar los datos completos
       // Si no, crear con stock=0 y precios=0
       const productStore = await ProductStore.create({
         productId: product._id,
         storeId: userStoreId,
-        locationId: isCurrentStore ? req.body.locationId : req.body.locationId, // Usar la misma locationId (cada tienda debe actualizarla después)
+        locationId: locationIdToUse, // Solo para la tienda actual
         stock: isCurrentStore ? stock : 0,
         salePrice: isCurrentStore ? salePrice : 0,
         purchasePrice: isCurrentStore ? purchasePrice : 0
       });
       
-      console.log(`✅ Created ProductStore for store ${userStoreId.toString()}`);
+      console.log(`✅ Created ProductStore: ${productStore._id}`);
       productStores.push(productStore);
     }
 
@@ -237,10 +266,53 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
       await ImageService.deleteImage(oldProduct.foto);
     }
 
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
+    // Convertir strings a números (llegan como strings en multipart)
+    const salePrice = req.body.salePrice ? parseFloat(req.body.salePrice) : undefined;
+    const purchasePrice = req.body.purchasePrice ? parseFloat(req.body.purchasePrice) : undefined;
+    const stock = req.body.stock ? parseInt(req.body.stock) : undefined;
+
+    // Actualizar datos genéricos del producto
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      {
+        name: req.body.name,
+        description: req.body.description,
+        categoryId: req.body.categoryId,
+        supplierId: req.body.supplierId,
+        weight: req.body.weight,
+        expiryDate: req.body.expiryDate,
+        foto: req.body.foto
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    // Actualizar datos en ProductStore para la tienda actual
+    if (req.body.storeId) {
+      const updateData: any = {};
+      
+      if (req.body.locationId) {
+        updateData.locationId = req.body.locationId;
+      }
+      if (salePrice !== undefined) {
+        updateData.salePrice = salePrice;
+      }
+      if (purchasePrice !== undefined) {
+        updateData.purchasePrice = purchasePrice;
+      }
+      if (stock !== undefined) {
+        updateData.stock = stock;
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        await ProductStore.updateOne(
+          { productId: req.params.id, storeId: req.body.storeId },
+          updateData
+        );
+      }
+    }
 
     res.json({
       status: 'success',
@@ -259,12 +331,10 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
       return next(new AppError('Product not found', 404));
     }
 
-    // Eliminar imagen de Cloudinary si existe
-    if (product.foto) {
-      await ImageService.deleteImage(product.foto);
-    }
-
-    await Product.findByIdAndDelete(req.params.id);
+    // Soft delete: marcar como eliminado en lugar de borrar
+    product.isDeleted = true;
+    product.deletedAt = new Date();
+    await product.save();
 
     res.status(204).json({
       status: 'success',
@@ -340,6 +410,43 @@ export const searchProduct = async (req: Request, res: Response, next: NextFunct
     res.json({
       status: 'success',
       data: { product }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProductStocks = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Obtener el stock del producto en TODAS las tiendas
+    const productStores = await ProductStore.find({ productId: req.params.id })
+      .populate({
+        path: 'storeId',
+        select: 'name'
+      })
+      .populate({
+        path: 'locationId',
+        select: 'name'
+      });
+
+    if (productStores.length === 0) {
+      return next(new AppError('Product not found in any store', 404));
+    }
+
+    // Mapear los datos para devolver de forma clara
+    const stocks = productStores.map(ps => ({
+      storeId: (ps.storeId as any)?._id,
+      storeName: (ps.storeId as any)?.name || 'Sin tienda',
+      locationId: (ps.locationId as any)?._id,
+      locationName: (ps.locationId as any)?.name || 'Sin ubicación',
+      stock: ps.stock,
+      salePrice: ps.salePrice,
+      purchasePrice: ps.purchasePrice
+    }));
+
+    res.json({
+      status: 'success',
+      data: { stocks }
     });
   } catch (error) {
     next(error);

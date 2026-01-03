@@ -9,6 +9,8 @@ export interface IProduct extends Document {
   foto?: string;
   weight?: string;
   expiryDate?: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +51,15 @@ const productSchema = new Schema<IProduct>(
     expiryDate: {
       type: Date,
       required: [true, 'Expiry date is required']
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true // Index para búsquedas rápidas de no eliminados
+    },
+    deletedAt: {
+      type: Date,
+      default: null
     }
   },
   {
