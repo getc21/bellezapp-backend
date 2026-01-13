@@ -386,13 +386,13 @@ export const updateStock = async (req: Request, res: Response, next: NextFunctio
 export const searchProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { query } = req.params;
+    const { storeId } = req.query;
     
     if (!query || query.trim() === '') {
       return next(new AppError('Search query is required', 400));
     }
 
-    // Buscar producto por:
-    // 1. Nombre que contenga el query (case insensitive)
+    // Buscar producto por nombre o código
     const product = await Product.findOne({
       $or: [
         { name: { $regex: query, $options: 'i' } }
@@ -400,11 +400,30 @@ export const searchProduct = async (req: Request, res: Response, next: NextFunct
     })
     .populate('categoryId', 'name')
     .populate('supplierId', 'name')
-    .populate('locationId', 'name')
     .populate('storeId', 'name');
 
     if (!product) {
       return next(new AppError('Product not found', 404));
+    }
+
+    // Si se proporciona storeId, verificar que el producto existe en esa tienda
+    if (storeId) {
+      try {
+        const { Types } = require('mongoose');
+        const storeObjectId = new Types.ObjectId(storeId as string);
+        
+        const productStore = await ProductStore.findOne({
+          productId: product._id,
+          storeId: storeObjectId
+        });
+
+        if (!productStore || productStore.stock === 0) {
+          return next(new AppError('Producto no disponible en esta tienda', 404));
+        }
+      } catch (error) {
+        console.error('Error buscando ProductStore:', error);
+        return next(new AppError('Error validando disponibilidad del producto', 500));
+      }
     }
 
     res.json({
@@ -412,6 +431,7 @@ export const searchProduct = async (req: Request, res: Response, next: NextFunct
       data: { product }
     });
   } catch (error) {
+    console.error('Error en searchProduct:', error);
     next(error);
   }
 };
