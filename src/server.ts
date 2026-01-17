@@ -28,39 +28,31 @@ const app: Application = express();
 const PORT = process.env.PORT || 3000;
 
 const corsOptions = {
-  origin: function(origin: any, callback: any) {
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:8000',
-      'http://localhost:8080',
-      'http://localhost:5173',
-      'https://bellezapp-frontend.netlify.app',
-      'https://bellezapp-frontend.vercel.app',
-      process.env.FRONTEND_URL
-    ].filter(Boolean);
-    
-    // Allow requests with no origin (like mobile apps or Postman)
-    // and requests from allowed origins
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      // For debugging: log rejected origins
-      console.log('CORS rejected origin:', origin);
-      callback(null, true); // Allow for now to debug
-    }
-  },
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:8000',
+    'http://localhost:8080',
+    'http://localhost:5173',
+    'https://bellezapp-frontend.netlify.app',
+    'https://bellezapp-frontend.vercel.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['x-access-token'],
+  exposedHeaders: ['x-access-token', 'x-auth-token'],
+  maxAge: 86400,
+  preflightContinue: false,
   optionsSuccessStatus: 200
 };
 
 // Middleware
-app.use(helmet());
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false
+}));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
