@@ -34,20 +34,28 @@ const corsOptions = {
       'http://localhost:3001',
       'http://localhost:8000',
       'http://localhost:8080',
+      'http://localhost:5173',
       'https://bellezapp-frontend.netlify.app',
       'https://bellezapp-frontend.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean);
     
+    // Allow requests with no origin (like mobile apps or Postman)
+    // and requests from allowed origins
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // For debugging: log rejected origins
+      console.log('CORS rejected origin:', origin);
+      callback(null, true); // Allow for now to debug
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['x-access-token'],
+  optionsSuccessStatus: 200
+};
   optionsSuccessStatus: 200
 };
 
