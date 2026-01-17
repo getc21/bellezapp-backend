@@ -56,8 +56,6 @@ const corsOptions = {
   exposedHeaders: ['x-access-token'],
   optionsSuccessStatus: 200
 };
-  optionsSuccessStatus: 200
-};
 
 // Middleware
 app.use(helmet());
