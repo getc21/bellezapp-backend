@@ -27,35 +27,26 @@ import expenseRoutes from './routes/expense.routes';
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
 
+// CORS Configuration
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:8000',
-    'http://localhost:8080',
-    'http://localhost:5173',
-    'https://bellezapp-frontend.netlify.app',
-    'https://bellezapp-frontend.vercel.app'
-  ],
-  credentials: true,
+  origin: '*', // Temporarily allow all origins for debugging
+  credentials: false,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   exposedHeaders: ['x-access-token', 'x-auth-token'],
-  maxAge: 86400,
-  preflightContinue: false,
+  maxAge: 3600,
   optionsSuccessStatus: 200
 };
 
-// Middleware
-app.use(cors(corsOptions));
+// Middleware - CORS MUST come first, before helmet
 app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-  contentSecurityPolicy: false
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Routes
 app.get('/health', (req, res) => {
